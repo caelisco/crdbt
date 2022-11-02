@@ -80,18 +80,21 @@ func Upgrade(version string) {
 	log.Println("Stopping cockroach...")
 	systemd.Stop()
 	log.Println("Stopped!")
-	log.Println("copying over cockroach into /usr/local/bin/")
+	log.Println("Copying over cockroach into /usr/local/bin/ ")
 
 	dir := "./cockroach-v" + version + ".linux-amd64/"
 
 	exec.RunOutput("sudo", "cp", dir+"cockroach", "/usr/local/bin")
 	// Install extra files - will assume that the mkdir command will fail
 	exec.RunOutput("sudo", "mkdir", "-p", "/usr/local/lib/cockroach")
+	log.Print("Copying over libgeos.so to /user/local/lib/cockroach/ ")
 	exec.RunOutput("sudo", "cp", "-i", dir+"lib/libgeos.so", "/usr/local/lib/cockroach/")
+	log.Print("Copying over libgeos_c.so to /user/local/lib/cockroach/ ")
 	exec.RunOutput("sudo", "cp", "-i", dir+"lib/libgeos_c.so", "/usr/local/lib/cockroach/")
 
-	log.Println("Starting cockroach...")
+	log.Println("Starting cockroach service...")
 	systemd.Start()
+	log.Println("Complete. Use ./crdbt status")
 }
 
 func Download(version string, uri string) (string, error) {
@@ -109,11 +112,6 @@ func Download(version string, uri string) (string, error) {
 		var option string
 		fmt.Scanf("%s", &option)
 		if strings.EqualFold(option, "e") {
-			err := ExtractTGZ(file)
-			if err != nil {
-				fmt.Println(" ----- error ----- ")
-				fmt.Println(err)
-			}
 			return version, nil
 		}
 	}
