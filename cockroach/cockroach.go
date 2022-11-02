@@ -105,7 +105,7 @@ func Download(version string, uri string) (string, error) {
 	}
 
 	if _, err := os.Stat(file); !os.IsNotExist(err) {
-		fmt.Print("The file already exists. Extract (e) / Overwrite (o):")
+		fmt.Print("The file already exists. Extract (e) / Overwrite (o): ")
 		var option string
 		fmt.Scanf("%s", &option)
 		if strings.EqualFold(option, "e") {
@@ -141,8 +141,11 @@ func Download(version string, uri string) (string, error) {
 }
 
 func ExtractTGZ(file string) error {
+	if !strings.Contains(file, "cockroach-v") {
+		file = "cockroach-v" + file + ".linux-amd64.tgz"
+	}
 	if _, err := os.Stat(file); os.IsNotExist(err) {
-		fmt.Println("input file does not exist")
+		fmt.Println("input file does not exist:", file)
 		return err
 	}
 	fmt.Print("extracting ", file)
