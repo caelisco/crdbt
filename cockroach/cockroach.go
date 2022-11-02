@@ -38,11 +38,11 @@ func GetCertsDir() string {
 
 func Update() {
 	instver := GetVersion()
-	fmt.Println("Installed version of cockroach DB:", instver)
+	fmt.Println("Installed version of Cockroach DB:", instver)
 	instveri, _ := strconv.Atoi(strings.ReplaceAll(instver, ".", ""))
 	relver, _ := GetReleases(false)
 	relveri, _ := strconv.Atoi(strings.ReplaceAll(relver, ".", ""))
-	fmt.Println("Available version of cockroach DB:", relver)
+	fmt.Println("Available version of Cockroach DB:", relver)
 
 	if relveri == instveri {
 		fmt.Println("You have the latest version of Cockroach DB installed")

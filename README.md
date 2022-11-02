@@ -11,8 +11,3 @@ I opted to combine the scripts in to a single Go application.
 
 ** Important: 
 early versions of crdbt are aimed at only satisfying my own needs to interact and manage Cockroach DB at Intergreatme. It is designed to run on Linux, and has only been tested to run on Ubuntu, and works with systemd.
-
-Using crdbt
-
-Download, install, and upgrade Cockroach DB
-
