@@ -53,6 +53,7 @@ func Update() {
 			fmt.Println("\tcrdbt upgrade latest")
 			fmt.Println("\tcrdbt upgrade <version>")
 			fmt.Println("\tcrdbt list")
+			fmt.Println("Read the release notes here: https://www.cockroachlabs.com/docs/releases/index.html")
 		}
 	}
 }
@@ -101,7 +102,6 @@ func Download(version string, uri string) (string, error) {
 	if strings.EqualFold(version, "latest") {
 		version, uri = GetReleases(false)
 	}
-	fmt.Println(version, uri)
 	file := "cockroach-v" + version + ".linux-amd64.tgz"
 	if uri == "" {
 		uri = "https://binaries.cockroachdb.com/" + file
