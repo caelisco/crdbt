@@ -38,21 +38,23 @@ func GetCertsDir() string {
 
 func Update() {
 	instver := GetVersion()
-	fmt.Println("Installed version of CockroachDB:", instver)
 	instveri, _ := strconv.Atoi(strings.ReplaceAll(instver, ".", ""))
 	relver, _ := GetReleases(false)
 	relveri, _ := strconv.Atoi(strings.ReplaceAll(relver, ".", ""))
-	fmt.Println("Available version of CockroachDB:", relver)
 
 	if relveri == instveri {
-		fmt.Println("You have the latest version of CockroachDB installed")
+		fmt.Println("You have the latest version of CockroachDB")
+		fmt.Println("Installed version:", instver)
+		fmt.Println("Latest version:", relver)
 	} else {
 		if relveri > instveri {
-			fmt.Println("You can upgrade to version", relver, "of CockroachDB!")
-			fmt.Println("Options:")
-			fmt.Println("\tcrdbt upgrade latest")
-			fmt.Println("\tcrdbt upgrade <version>")
-			fmt.Println("\tcrdbt list")
+			fmt.Println(" ╭──────────────────────────────────────────────────────────────────────╮")
+			fmt.Println(" │\tA new version of CockroachDB is available!                      │")
+			fmt.Println(" │\tCurrent version:", instver, "\t\t\t\t\t│")
+			fmt.Println(" │\tUpgrade version:", relver, "\t\t\t\t\t│")
+			fmt.Println(" │\tTo update to the latest version, use \"crdbt upgrade latest\"\t│")
+			fmt.Println(" ╰──────────────────────────────────────────────────────────────────────╯")
+			fmt.Println("To view available versions of CockroachDB use \"crdbt list\"")
 			fmt.Println("Read the release notes here: https://www.cockroachlabs.com/docs/releases/index.html")
 		}
 	}

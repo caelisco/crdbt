@@ -142,6 +142,7 @@ func usage(err string) {
 	txtformat("download <version>", "download the specified version of CockroachDB")
 	txtformat("download latest", "download the latest version of CockroachDB based on the releases page")
 	txtformat("extract <file>", "extract the contents from the specified .tgz file")
+	txtformat("tidy", "Clean up old downloads and extracted files")
 	fmt.Println("\nsystemd commands")
 	txtformat("systemd status", "display the status of the CockroachDB service")
 	txtformat("systemd start", "start the CockroachDB service")
