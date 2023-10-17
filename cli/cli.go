@@ -146,7 +146,7 @@ func usage(err string) {
 		color.Println("\n<fg=white;bg=red;>ERROR:</>", err)
 		fmt.Println()
 	}
-	fmt.Println("crdbt command {version} [options]")
+	fmt.Println("crdbt command [options] <version>")
 	fmt.Println()
 	txtformat("version", "output the version of crdbt and CockroachDB")
 	txtformat("update", "check to see if there are any updates available for CockroachDB")
