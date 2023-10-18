@@ -1,10 +1,8 @@
 package systemd
 
 import (
-	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/caelisco/crdbt/exec"
 )
@@ -50,19 +48,6 @@ func Disable() (string, error) {
 // sudo systemctl reload-daemon
 func DaemonReload() (string, error) {
 	return exec.RunCombined("sudo", "systemctl", "daemon-reload")
-}
-
-func CreateUser() (string, error) {
-	var c string
-	fmt.Print("You are about to add the user 'cockroach' to the system. Continue? Y/N: ")
-	fmt.Scanf("%s", &c)
-	if strings.EqualFold(c, "y") {
-		out, err := exec.CreateUser()
-		fmt.Println("Added user to system")
-		return out, err
-	}
-	fmt.Println("Did not add user to system")
-	return "", nil
 }
 
 // create the cockroach.service file

@@ -27,8 +27,8 @@ func ParseArgs() {
 	for _, v := range os.Args[1:] {
 		if strings.EqualFold(v, "version") {
 			fmt.Println("crdbt - a command line utility for working with CockroachDB")
-			fmt.Println("version: ")
-			fmt.Println("Runtime: ", action.GetOS())
+			fmt.Println("crdbt version: ")
+			fmt.Println("Runtime      : ", action.GetOS())
 		}
 		if strings.EqualFold(v, "-v") || strings.EqualFold(v, "--verbose") {
 			log.Println("Running crdbt in verbose mode")
@@ -37,38 +37,54 @@ func ParseArgs() {
 			args = append(args, v)
 		}
 	}
+
 	// check that there are enough commands to be useful
 	if len(args) < 1 {
 		usage("Not enough command line arguments for crdbt to be useful!")
 		return
 	}
+
 	// handle commands
 	switch args[0] {
+
 	case "help":
 		usage("")
+
 	case "version":
 		out, err := cockroach.Version()
 		if err != nil {
 			color.Println("<fg=white;bg=red;>Error:</>", err)
-			return
 		}
 		fmt.Println(out)
+
 	case "download":
 		if ok := argCountCheck(args, 2); ok {
-			action.Download(args[1], "")
+			file, err := action.Download(args[1])
+			if err != nil && strings.EqualFold("extract", err.Error()) {
+				action.ExtractTGZ(file)
+			} else if err != nil {
+				color.Println("<fg=white;bg=red>Error:</>", err)
+				color.Println("<cyan>Potential fix:</> Use crdbt download <yellow>latest</>")
+				color.Println("<cyan>Potential fix:</> Use a pattern like <yellow>23.1.1</>")
+				fmt.Println("crdbt supports downloading alpha, beta and rc versions")
+			}
 			return
 		}
-		usage("not enough command line arguments to download.\n\t Try crdbt download latest")
+		usage("not enough command line arguments to download.\n\tTry crdbt download latest")
+
 	case "update":
 		//cockroach.Update()
+
 	case "upgrade":
 		if ok := argCountCheck(args, 2); ok {
 			//cockroach.Upgrade(args[1])
 			return
 		}
 		usage("Not enough command line arguments to upgrade.\n\t Try: crdbt upgrade latest")
+
 	case "list":
 		cockroach.GetReleases(true)
+
 	case "extract":
 		if ok := argCountCheck(args, 2); ok {
 			action.ExtractTGZ(args[1])
@@ -76,6 +92,7 @@ func ParseArgs() {
 		}
 		color.Println("<fg=white;bg=red>ERROR:</> Provide a filename to extract")
 		color.Println("Usage: crdbt extract <yellow>[filename]</>")
+
 	case "tidy":
 		files, err := filepath.Glob("cockroach-v*.linux-amd64*")
 		if err != nil {
@@ -89,54 +106,79 @@ func ParseArgs() {
 			if err != nil {
 				fmt.Println("failed to delete:", v)
 			}
-			fmt.Println("Deleted:", v)
+			color.Println("<tomato>Deleted</>:", v)
 		}
 		if len(files) > 0 {
 			color.Println("<green>SUCCESS!</> Folder is now tidy")
 		}
+
 	case "certs-dir":
 		fmt.Print(cockroach.GetCertsDir())
+
 	case "systemd":
 		switch args[1] {
 		case "start":
 			systemd.Start()
+
 		case "stop":
 			systemd.Stop()
+
 		case "status":
 			out, _ := systemd.Status()
 			fmt.Println(out)
+
 		case "restart":
 			systemd.Restart()
+
 		case "reload":
 			systemd.Reload()
+
 		case "enable":
 			systemd.Enable()
+
 		case "disable":
 			systemd.Disable()
+
 		case "daemon-reload":
 			systemd.DaemonReload()
+
 		case "create-user":
-			systemd.CreateUser()
+			out, err := action.CreateUser()
+			if err != nil {
+				log.Fatal(err)
+			}
+			// using strings.TrimSpace to remove newline character
+			fmt.Println(strings.TrimSpace(out))
+
 		case "create":
 			systemd.CreateServiceFile()
+
 		case "install":
 			systemd.InstallService()
+
 		case "uninstall":
 			systemd.UninstallService()
+
 		default:
 			usage("No such argument exists!")
 		}
+
 	case "start":
 		systemd.Start()
+
 	case "stop":
 		systemd.Stop()
+
 	case "status":
 		out, _ := systemd.Status()
 		fmt.Println(out)
+
 	case "restart":
 		systemd.Restart()
+
 	case "reload":
 		systemd.Reload()
+
 	default:
 		usage("No such argument exists!")
 	}
