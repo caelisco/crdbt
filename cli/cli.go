@@ -59,14 +59,8 @@ func ParseArgs() {
 
 	case "download":
 		if ok := argCountCheck(args, 2); ok {
-			file, err := action.Download(args[1])
-			if err != nil && strings.EqualFold("extract", err.Error()) {
-				err = action.ExtractTGZ(file)
-				if err != nil {
-					color.Println("<fg=white;bg=red>Error:</>", err)
-					return
-				}
-			} else if err != nil {
+			_, err := action.Download(args[1])
+			if err != nil {
 				color.Println("<fg=white;bg=red>Error:</>", err)
 				color.Println("<cyan>Potential fix:</> Use crdbt download <yellow>latest</>")
 				color.Println("<cyan>Potential fix:</> Use a pattern like <yellow>23.1.1</>")
@@ -109,14 +103,16 @@ func ParseArgs() {
 	case "install":
 		if ok := argCountCheck(args, 2); ok {
 			file, err := action.Download(args[1])
-			if err != nil && !strings.EqualFold("extract", err.Error()) {
-				fmt.Println(err)
-				return
-			}
-			err = action.ExtractTGZ(file)
 			if err != nil {
 				fmt.Println(err)
 				return
+			}
+			if file != "" {
+				err = action.ExtractTGZ(file)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
 			}
 			// move files
 			fmt.Println("move files")

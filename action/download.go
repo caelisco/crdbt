@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/caelisco/crdbt/cockroach"
+	"github.com/gookit/color"
 	"github.com/schollz/progressbar/v3"
 )
 
@@ -29,13 +30,11 @@ func Download(version string) (string, error) {
 		uri = fmt.Sprintf("https://binaries.cockroachdb.com/%s", file)
 	}
 
+	color.Printf("Attempting to download <yellow>%s</>\n", file)
+
 	if _, err := os.Stat(file); !os.IsNotExist(err) {
-		fmt.Print("The file already exists. Extract (e) / Overwrite (o): ")
-		var option string
-		fmt.Scanf("%s", &option)
-		if strings.EqualFold("e", option) {
-			return file, fmt.Errorf("extract")
-		}
+		color.Println("<tomato>Warning:</> The file already exists.")
+		return file, err
 	}
 
 	req, _ := http.NewRequest("GET", uri, nil)

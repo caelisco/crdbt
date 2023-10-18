@@ -16,8 +16,11 @@ func ExtractTGZ(file string) error {
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		return fmt.Errorf("input file does not exist: %s", file)
 	}
-	color.Printf("Extracting <yellow>%s</>", file)
+	done := make(chan bool)
+	go TaskSpinner(done)
+	color.Printf("Extracting <yellow>%s</> ", file)
 	_, err := exec.RunOutput("tar", "-zxvf", file)
+	done <- true
 	if err != nil {
 		return err
 	}
