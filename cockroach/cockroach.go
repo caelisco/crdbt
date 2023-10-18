@@ -66,11 +66,11 @@ func Upgrade(version string) {
 		}
 	}
 
-	filename, err := Download(ver, uri)
+	filename, err := action.Download(ver, uri)
 	if err != nil {
 		fmt.Println(err)
 	}
-	ExtractTGZ(filename)
+	action.ExtractTGZ(filename)
 	log.Println("Stopping cockroach...")
 	systemd.Stop()
 	log.Println("Stopped!")

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/caelisco/crdbt/action"
 	"github.com/caelisco/crdbt/cockroach"
 	"github.com/caelisco/crdbt/exec"
 	"github.com/caelisco/crdbt/systemd"
@@ -27,6 +28,7 @@ func ParseArgs() {
 		if strings.EqualFold(v, "version") {
 			fmt.Println("crdbt - a command line utility for working with CockroachDB")
 			fmt.Println("version: ")
+			fmt.Println("Runtime: ", action.GetOS())
 		}
 		if strings.EqualFold(v, "-v") || strings.EqualFold(v, "--verbose") {
 			log.Println("Running crdbt in verbose mode")
@@ -53,7 +55,7 @@ func ParseArgs() {
 		fmt.Println(out)
 	case "download":
 		if ok := argCountCheck(args, 2); ok {
-			cockroach.Download(args[1], "")
+			action.Download(args[1], "")
 			return
 		}
 		usage("not enough command line arguments to download.\n\t Try crdbt download latest")
@@ -69,7 +71,7 @@ func ParseArgs() {
 		cockroach.GetReleases(true)
 	case "extract":
 		if ok := argCountCheck(args, 2); ok {
-			cockroach.ExtractTGZ(args[1])
+			action.ExtractTGZ(args[1])
 			return
 		}
 		color.Println("<fg=white;bg=red>ERROR:</> Provide a filename to extract")
