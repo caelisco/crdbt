@@ -61,7 +61,11 @@ func ParseArgs() {
 		if ok := argCountCheck(args, 2); ok {
 			file, err := action.Download(args[1])
 			if err != nil && strings.EqualFold("extract", err.Error()) {
-				action.ExtractTGZ(file)
+				err = action.ExtractTGZ(file)
+				if err != nil {
+					color.Println("<fg=white;bg=red>Error:</>", err)
+					return
+				}
 			} else if err != nil {
 				color.Println("<fg=white;bg=red>Error:</>", err)
 				color.Println("<cyan>Potential fix:</> Use crdbt download <yellow>latest</>")
@@ -87,7 +91,11 @@ func ParseArgs() {
 
 	case "extract":
 		if ok := argCountCheck(args, 2); ok {
-			action.ExtractTGZ(args[1])
+			err := action.ExtractTGZ(args[1])
+			if err != nil {
+				color.Println("<fg=white;bg=red>Error:</>", err)
+				return
+			}
 			return
 		}
 		color.Println("<fg=white;bg=red>ERROR:</> Provide a filename to extract")

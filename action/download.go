@@ -3,7 +3,6 @@ package action
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -58,7 +57,7 @@ func Download(version string) (string, error) {
 		"Downloading Cockroach v"+version,
 	)
 	io.Copy(io.MultiWriter(f, bar), resp.Body)
-	log.Println("Download complete!")
+	fmt.Println("Download complete!")
 	if err != nil {
 		return file, err
 	}

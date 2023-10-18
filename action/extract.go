@@ -9,8 +9,9 @@ import (
 )
 
 func ExtractTGZ(file string) error {
-	if !strings.Contains(file, "cockroach-v") {
-		file = "cockroach-v" + file + ".linux-amd64.tgz"
+	fmt.Println("file:", file)
+	if !strings.Contains(".tgz", file) {
+		return fmt.Errorf("unknown extension, cannot extract from %s", file)
 	}
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		fmt.Println("input file does not exist:", file)
