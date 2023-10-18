@@ -1,13 +1,14 @@
 package systemd
 
 import (
+	_ "embed"
 	"log"
 	"os"
 
 	"github.com/caelisco/crdbt/exec"
 )
 
-//go:embede cockroach.service
+//go:embed cockroach.service
 var cockroachService []byte
 
 // sudo systemctl start cockroach

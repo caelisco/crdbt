@@ -112,6 +112,7 @@ func ParseArgs() {
 				}
 			}
 			if file != "" {
+				color.Printf("<cyan>Info:</> File exists <yellow>%s</>\n", file)
 				err = action.ExtractTGZ(file)
 				if err != nil {
 					fmt.Println(err)
@@ -119,8 +120,11 @@ func ParseArgs() {
 				}
 			}
 			// move files
-			fmt.Println("move files")
-			action.MoveFiles(file)
+			err = action.MoveFiles(file)
+			if err != nil {
+				return
+			}
+			// give 'next step' instructions
 			return
 		}
 		usage("Not enough command line arguments to install.\n\tTry: crdbt install latest")
