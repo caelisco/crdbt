@@ -102,10 +102,14 @@ func ParseArgs() {
 
 	case "install":
 		if ok := argCountCheck(args, 2); ok {
-			file, err := action.Download(args[1])
-			if err != nil {
-				fmt.Println(err)
-				return
+			var err error
+			file := args[1]
+			if !action.FileExists(file) {
+				file, err = action.Download(file)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
 			}
 			if file != "" {
 				err = action.ExtractTGZ(file)
@@ -212,7 +216,7 @@ func ParseArgs() {
 }
 
 func usage(err string) {
-	fmt.Println("crdbt: a command line utility to help work with CockroachDB")
+	fmt.Println("\ncrdbt: a command line utility to work with CockroachDB")
 	if err != "" {
 		color.Println("\n<fg=white;bg=red;>ERROR:</>", err)
 		fmt.Println()

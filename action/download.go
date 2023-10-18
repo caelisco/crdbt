@@ -36,7 +36,7 @@ func Download(version string) (string, error) {
 		color.Println("<tomato>Warning:</> The file already exists")
 		color.Printf("Use: crdbt extract <yellow>%s</>\n", file)
 		color.Printf("Use: crdbt install <yellow>%s</>\n", file)
-		return file, nil
+		return "", nil
 	}
 
 	req, _ := http.NewRequest("GET", uri, nil)
@@ -47,7 +47,7 @@ func Download(version string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return file, fmt.Errorf("unknown version (unexpected status code: %d)", resp.StatusCode)
+		return "", fmt.Errorf("unknown version (unexpected status code: %d)", resp.StatusCode)
 	}
 
 	f, _ := os.OpenFile(file, os.O_CREATE|os.O_WRONLY, 0644)
@@ -60,7 +60,7 @@ func Download(version string) (string, error) {
 	io.Copy(io.MultiWriter(f, bar), resp.Body)
 	fmt.Println("Download complete!")
 	if err != nil {
-		return file, err
+		return "", err
 	}
 	return file, nil
 }
