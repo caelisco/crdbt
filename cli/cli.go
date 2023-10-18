@@ -159,8 +159,7 @@ func ParseArgs() {
 			systemd.Stop()
 
 		case "status":
-			out, _ := systemd.Status()
-			fmt.Println(out)
+			systemd.Status()
 
 		case "restart":
 			systemd.Restart()
@@ -205,8 +204,7 @@ func ParseArgs() {
 		systemd.Stop()
 
 	case "status":
-		out, _ := systemd.Status()
-		fmt.Println(out)
+		systemd.Status()
 
 	case "restart":
 		systemd.Restart()
@@ -239,6 +237,13 @@ func usage(err string) {
 	txtformat("upgrade latest", "upgrade CockroachDB to the latest version based on the releases page")
 	txtformat("version", "output the version of crdbt and CockroachDB")
 
+	fmt.Println("\nCockroach commands (through systemd)")
+	txtformat("reload", "Reload CochroachDB")
+	txtformat("restart", "Restart CockroachDB")
+	txtformat("start", "Start CockroachDB")
+	txtformat("status", "Get the status of CockroachDB")
+	txtformat("stop", "Stop CockroachDB")
+
 	fmt.Println("\nsystemd commands")
 
 	txtformat("systemd create", "create a cockroach.service file in the current directory")
@@ -248,11 +253,6 @@ func usage(err string) {
 	txtformat("systemd enable", "enable the CockroachDB service to run at boot")
 	txtformat("systemd install", "install the cockroach.service file to /etc/systemd/system/")
 	txtformat("systemd uninstall", "uninstall the cockroach.service file from /etc/systemd/system/")
-	txtformat("reload", "alias of systemd reload")
-	txtformat("restart", "alias of systemd restart")
-	txtformat("start", "alias of systemd start")
-	txtformat("status", "alias of systemd status")
-	txtformat("stop", "alias of systemd stop")
 
 	fmt.Println()
 }
