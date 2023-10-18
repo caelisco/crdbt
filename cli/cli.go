@@ -77,8 +77,13 @@ func ParseArgs() {
 		usage("not enough command line arguments to download.\n\tTry crdbt download latest")
 
 	case "update":
-		//cockroach.Update()
-
+		out, err := cockroach.Version()
+		if err != nil {
+			color.Println("<fg=white;bg=red;>Error:</>", err)
+			color.Println("<cyan>Potential fix:</> Use crdbt install latest")
+			return
+		}
+		fmt.Println(out)
 	case "upgrade":
 		if ok := argCountCheck(args, 2); ok {
 			//cockroach.Upgrade(args[1])
@@ -101,6 +106,24 @@ func ParseArgs() {
 		color.Println("<fg=white;bg=red>ERROR:</> Provide a filename to extract")
 		color.Println("Usage: crdbt extract <yellow>[filename]</>")
 
+	case "install":
+		if ok := argCountCheck(args, 2); ok {
+			file, err := action.Download(args[1])
+			if err != nil && !strings.EqualFold("extract", err.Error()) {
+				fmt.Println(err)
+				return
+			}
+			err = action.ExtractTGZ(file)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			// move files
+			fmt.Println("move files")
+			action.MoveFiles(file)
+			return
+		}
+		usage("Not enough command line arguments to install.\n\tTry: crdbt install latest")
 	case "tidy":
 		files, err := filepath.Glob("cockroach-v*.linux-amd64*")
 		if err != nil {
@@ -112,7 +135,7 @@ func ParseArgs() {
 		for _, v := range files {
 			err := os.RemoveAll(v)
 			if err != nil {
-				fmt.Println("failed to delete:", v)
+				fmt.Println("Failed to delete:", v)
 			}
 			color.Println("<tomato>Deleted</>:", v)
 		}
@@ -200,29 +223,34 @@ func usage(err string) {
 	}
 	fmt.Println("crdbt command [options] <version>")
 	fmt.Println()
-	txtformat("version", "output the version of crdbt and CockroachDB")
-	txtformat("update", "check to see if there are any updates available for CockroachDB")
-	txtformat("upgrade <version>", "upgrade CockroachDB to the specified version")
-	txtformat("upgrade latest", "upgrade CockroachDB to the latest version based on the releases page")
-	txtformat("list", "list all releases of CockroachDB")
 	txtformat("download <version>", "download the specified version of CockroachDB")
 	txtformat("download latest", "download the latest version of CockroachDB based on the releases page")
 	txtformat("extract <file>", "extract the contents from the specified .tgz file")
+	txtformat("install <version>", "download, extract, and install the specified version")
+	txtformat("install latest", "download, extract, and install the latest version")
+	txtformat("list", "list all releases of CockroachDB")
 	txtformat("tidy", "Clean up old downloads and extracted files")
+	txtformat("update", "check to see if there are any updates available for CockroachDB")
+	txtformat("upgrade <version>", "upgrade CockroachDB to the specified version")
+	txtformat("upgrade latest", "upgrade CockroachDB to the latest version based on the releases page")
+	txtformat("version", "output the version of crdbt and CockroachDB")
+
 	fmt.Println("\nsystemd commands")
-	txtformat("status", "alias of systemd status")
-	txtformat("start", "alias of systemd start")
-	txtformat("stop", "alias of systemd stop")
-	txtformat("restart", "alias of systemd restart")
-	txtformat("reload", "alias of systemd reload")
-	txtformat("systemd enable", "enable the CockroachDB service to run at boot")
-	txtformat("systemd disable", "disable the CockroachDB service running at boot")
-	txtformat("systemd daemon-reload", "run systemctl daemon-reload")
-	txtformat("systemd create-user", "create a cockroach user")
+
 	txtformat("systemd create", "create a cockroach.service file in the current directory")
+	txtformat("systemd create-user", "create a cockroach user")
+	txtformat("systemd daemon-reload", "run systemctl daemon-reload")
+	txtformat("systemd disable", "disable the CockroachDB service running at boot")
+	txtformat("systemd enable", "enable the CockroachDB service to run at boot")
 	txtformat("systemd install", "install the cockroach.service file to /etc/systemd/system/")
 	txtformat("systemd uninstall", "uninstall the cockroach.service file from /etc/systemd/system/")
+	txtformat("reload", "alias of systemd reload")
+	txtformat("restart", "alias of systemd restart")
+	txtformat("start", "alias of systemd start")
+	txtformat("status", "alias of systemd status")
+	txtformat("stop", "alias of systemd stop")
 
+	fmt.Println()
 }
 
 func txtformat(cmd string, desc string) {

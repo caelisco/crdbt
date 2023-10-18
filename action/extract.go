@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/caelisco/crdbt/exec"
+	"github.com/gookit/color"
 )
 
 func ExtractTGZ(file string) error {
@@ -15,11 +16,11 @@ func ExtractTGZ(file string) error {
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		return fmt.Errorf("input file does not exist: %s", file)
 	}
-	fmt.Print("extracting", file)
+	color.Printf("Extracting <yellow>%s</>", file)
 	_, err := exec.RunOutput("tar", "-zxvf", file)
 	if err != nil {
 		return err
 	}
-	fmt.Println(" complete!")
+	color.Println(" <green>complete!</>")
 	return err
 }
