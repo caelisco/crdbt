@@ -60,10 +60,10 @@ func ParseArgs() {
 		}
 		usage("not enough command line arguments to download.\n\t Try crdbt download latest")
 	case "update":
-		cockroach.Update()
+		//cockroach.Update()
 	case "upgrade":
 		if ok := argCountCheck(args, 2); ok {
-			cockroach.Upgrade(args[1])
+			//cockroach.Upgrade(args[1])
 			return
 		}
 		usage("Not enough command line arguments to upgrade.\n\t Try: crdbt upgrade latest")
