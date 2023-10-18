@@ -2,24 +2,25 @@ package action
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/caelisco/crdbt/exec"
+	"github.com/gookit/color"
 )
 
 func MoveFiles(file string) {
 	dir := fmt.Sprintf("./%s/", strings.TrimSuffix(file, ".tgz"))
-	fmt.Println("file:", file)
-	fmt.Println("dir:", dir)
-	log.Println("Copying cockroach into /usr/local/bin/ ")
+
+	color.Print("Copying <yellow>cockroach</> into <cyan>/usr/local/bin/</> ")
 
 	out, err := exec.RunOutput("sudo", "cp", fmt.Sprintf("%scockroach", dir), "/usr/local/bin")
 	if err != nil {
+		color.Println("<tomato>failed!</>")
 		fmt.Println(err)
 		fmt.Println(out)
 		return
 	}
+	color.Println("<green>complete!</>")
 	// Install extra files - will assume that the mkdir command will fail
 	out, err = exec.RunOutput("sudo", "mkdir", "-p", "/usr/local/lib/cockroach")
 	if err != nil {
@@ -27,21 +28,26 @@ func MoveFiles(file string) {
 		fmt.Println(out)
 		return
 	}
-	log.Print("Copying libgeos.so to /user/local/lib/cockroach/ ")
+
+	color.Print("Copying <yellow>libgeos.so</> to <cyan>/user/local/lib/cockroach/</> ")
 	out, err = exec.RunOutput("sudo", "cp", "-i", fmt.Sprintf("%slib/libgeos.so", dir), "/usr/local/lib/cockroach/")
 	if err != nil {
+		color.Println("<tomato>failed!</>")
 		fmt.Println(err)
 		fmt.Println(out)
 		return
 	}
-	log.Print("Copying libgeos_c.so to /user/local/lib/cockroach/ ")
+	color.Println("<green>complete!</>")
+
+	color.Print("Copying <yellow>libgeos_c.so</> to <cyan>/user/local/lib/cockroach/</> ")
 	out, err = exec.RunOutput("sudo", "cp", "-i", fmt.Sprintf("%slib/libgeos_c.so", dir), "/usr/local/lib/cockroach/")
 	if err != nil {
+		color.Println("<tomato>failed!</>")
 		fmt.Println(err)
 		fmt.Println(out)
 		return
 	}
-	fmt.Println("Finished!")
+	color.Println("<green>complete!</>")
 }
 
 func RollbackMove(file string) {

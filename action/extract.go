@@ -2,7 +2,6 @@ package action
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/caelisco/crdbt/exec"
@@ -13,7 +12,7 @@ func ExtractTGZ(file string) error {
 	if !strings.Contains(file, ".tgz") {
 		return fmt.Errorf("unknown extension, cannot extract from %s", file)
 	}
-	if _, err := os.Stat(file); os.IsNotExist(err) {
+	if !FileExists(file) {
 		return fmt.Errorf("input file does not exist: %s", file)
 	}
 	done := make(chan bool)

@@ -32,9 +32,11 @@ func Download(version string) (string, error) {
 
 	color.Printf("Attempting to download <yellow>%s</>\n", file)
 
-	if _, err := os.Stat(file); !os.IsNotExist(err) {
-		color.Println("<tomato>Warning:</> The file already exists.")
-		return file, err
+	if FileExists(file) {
+		color.Println("<tomato>Warning:</> The file already exists")
+		color.Printf("Use: crdbt extract <yellow>%s</>\n", file)
+		color.Printf("Use: crdbt install <yellow>%s</>\n", file)
+		return file, nil
 	}
 
 	req, _ := http.NewRequest("GET", uri, nil)
