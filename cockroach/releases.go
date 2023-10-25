@@ -3,67 +3,107 @@ package cockroach
 import (
 	"fmt"
 	"net/http"
+	"runtime"
 	"strings"
 
-	"golang.org/x/net/html"
+	"github.com/PuerkitoBio/goquery"
 )
 
-type Releases struct {
-	List   []Latest
-	Latest Latest
+type Release struct {
+	Version      string
+	ReleaseNotes string
+	DownloadURI  string
+	SHA256Sum    string
 }
 
-type Latest struct {
-	Version string
-	URI     string
+type VersionGroup struct {
+	VersionPrefix string
+	Releases      []Release
 }
 
-func GetReleases(echo bool) (string, string) {
-	r := Releases{}
-	return r.Releases(echo)
-}
+func GetReleases(versions ...string) ([]VersionGroup, error) {
+	var versionGroups []VersionGroup
+	var currentGroup *VersionGroup
 
-func (r *Releases) Releases(echo bool) (string, string) {
-	resp, err := http.Get("https://www.cockroachlabs.com/docs/releases/")
+	url := "https://cockroachlabs.com/docs/releases/"
+
+	res, err := http.Get(url)
 	if err != nil {
-		fmt.Println("error getting a response from the release page")
-		fmt.Println(err)
+		return nil, err
 	}
-	defer resp.Body.Close()
-	doc, err := html.Parse(resp.Body)
+	defer res.Body.Close()
+
+	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
-		fmt.Println("error:", err)
+		return nil, err
 	}
-	r.parse_html(doc)
 
-	if echo {
-		fmt.Printf("%25s | %20s \n", "VERSION", "DOWNLOAD URL")
-		for i := len(r.List) - 1; i >= 0; i-- {
-			fmt.Printf("%25s | %20s \n", r.List[i].Version, r.List[i].URI)
-		}
-		fmt.Printf("\n%25s \n", "Latest:")
-		fmt.Printf("%25s | %20s \n", r.Latest.Version, r.Latest.URI)
-	}
-	return r.Latest.Version, r.Latest.URI
-}
+	fmt.Println("running with scope:", runtime.GOOS)
 
-func (r *Releases) parse_html(n *html.Node) {
-	if n.Type == html.ElementNode && n.Data == "a" {
-		for _, e := range n.Attr {
-			if e.Key == "href" {
-				// only interested in Linux without verification checksums
-				if strings.Contains(e.Val, "linux-amd64.tgz") && strings.Contains(e.Val, "v") && !strings.Contains(e.Val, "sha256sum") && !strings.Contains(e.Val, "sql") {
-					version := strings.TrimSuffix(strings.Split(e.Val, "v")[1], ".linux-amd64.tgz")
-					if !strings.Contains(e.Val, "alpha") && !strings.Contains(e.Val, "beta") && !strings.Contains(e.Val, "-rc") && r.Latest == (Latest{}) {
-						r.Latest.Version = version
-						r.Latest.URI = e.Val
+	doc.Find(fmt.Sprintf("section[data-scope='%s'] tr", runtime.GOOS)).Each(func(index int, element *goquery.Selection) {
+		if index > 0 { // Skip header row
+			version := strings.TrimSpace(element.Find("td").First().Text())
+			splitVersion := strings.Split(version, ".")
+			if len(splitVersion) >= 2 {
+				versionPrefix := strings.TrimSpace(strings.Join(splitVersion[:2], "."))
+				if versionPrefix != "Version" {
+					if currentGroup == nil || currentGroup.VersionPrefix != versionPrefix {
+						if currentGroup != nil {
+							versionGroups = append(versionGroups, *currentGroup)
+						}
+						currentGroup = &VersionGroup{
+							VersionPrefix: versionPrefix,
+						}
 					}
-					r.List = append(r.List, Latest{Version: version, URI: e.Val})
+					releaseNotes := fmt.Sprintf("%s%s", "https://www.cockroachlabs.com", strings.TrimSpace(element.Find("td a").First().AttrOr("href", "")))
+					downloadURI := strings.TrimSpace(element.Find("td a:contains('Full Binary')").AttrOr("href", ""))
+					if downloadURI == "" {
+						withdrawnText := element.Find("td span.badge").Text()
+						if strings.Contains(withdrawnText, "Withdrawn") {
+							downloadURI = "WITHDRAWN"
+						}
+					}
+
+					sha256SumLink := strings.TrimSpace(element.Find("td a:contains('SHA256')").AttrOr("href", ""))
+					release := Release{
+						Version:      version,
+						ReleaseNotes: releaseNotes,
+						DownloadURI:  downloadURI,
+						SHA256Sum:    sha256SumLink,
+					}
+					currentGroup.Releases = append(currentGroup.Releases, release)
 				}
 			}
 		}
+	})
+
+	if currentGroup != nil {
+		versionGroups = append(versionGroups, *currentGroup) // append the last group here
 	}
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		r.parse_html(c)
+
+	// this is for testing output
+	if len(versions) > 0 {
+		if versions[0][:1] != "v" {
+			versions[0] = "v" + versions[0]
+		}
+		for _, versionGroup := range versionGroups {
+			if versionGroup.VersionPrefix == versions[0] {
+				fmt.Printf("Version Prefix: %s\n", versionGroup.VersionPrefix)
+				fmt.Printf("Version%8s | Download%70s | SHA256%75s | Release Notes%56s\n", "", "", "", "")
+				fmt.Printf("%s|%s|%s|%s\n", strings.Repeat("-", 16), strings.Repeat("-", 80), strings.Repeat("-", 83), strings.Repeat("-", 70))
+				for _, release := range versionGroup.Releases {
+					fmt.Printf("%-15s | %-78s | %-81s | %-55s\n", release.Version, release.DownloadURI, release.SHA256Sum, release.ReleaseNotes)
+				}
+			}
+		}
+	} else {
+		for _, versionGroup := range versionGroups {
+			fmt.Printf("Version Prefix: %s\n", versionGroup.VersionPrefix)
+			for _, release := range versionGroup.Releases {
+				fmt.Printf("\tVersion: %s, Release Notes: %s, Download URI: %s, SHA256Sum: %s\n", release.Version, release.ReleaseNotes, release.DownloadURI, release.SHA256Sum)
+			}
+		}
 	}
+
+	return versionGroups, nil
 }

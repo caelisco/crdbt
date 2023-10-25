@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/caelisco/crdbt/cockroach"
 	"github.com/gookit/color"
 	"github.com/schollz/progressbar/v3"
 )
@@ -16,7 +15,7 @@ import (
 func Download(version string) (string, error) {
 	var uri string
 	if strings.EqualFold("latest", version) {
-		version, uri = cockroach.GetReleases(false)
+		//version, uri = cockroach.GetReleases(false)
 	}
 
 	re := regexp.MustCompile(`^\d+\.\d+.\d+`)

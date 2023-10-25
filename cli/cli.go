@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/caelisco/crdbt/action"
@@ -86,8 +85,12 @@ func ParseArgs() {
 		usage("Not enough command line arguments to upgrade.\n\t Try: crdbt upgrade latest")
 
 	case "list":
-		cockroach.GetReleases(true)
-
+		if len(args) == 1 {
+			cockroach.GetReleases()
+		}
+		if len(args) == 2 {
+			cockroach.GetReleases(args[1])
+		}
 	case "extract":
 		if ok := argCountCheck(args, 2); ok {
 			err := action.ExtractTGZ(args[1])
@@ -102,50 +105,15 @@ func ParseArgs() {
 
 	case "install":
 		if ok := argCountCheck(args, 2); ok {
-			var err error
-			file := args[1]
-			if !action.FileExists(file) {
-				file, err = action.Download(file)
-				if err != nil {
-					fmt.Println(err)
-					return
-				}
-			}
-			if file != "" {
-				color.Printf("<cyan>Info:</> File exists <yellow>%s</>\n", file)
-				err = action.ExtractTGZ(file)
-				if err != nil {
-					fmt.Println(err)
-					return
-				}
-			}
-			// move files
-			err = action.MoveFiles(file)
-			if err != nil {
+			err := action.Install(args[1])
+			if err == nil {
+				fmt.Println(err)
 				return
 			}
-			// give 'next step' instructions
-			return
 		}
 		usage("Not enough command line arguments to install.\n\tTry: crdbt install latest")
 	case "tidy":
-		files, err := filepath.Glob("cockroach-v*.linux-amd64*")
-		if err != nil {
-			fmt.Println(err)
-		}
-		if len(files) == 0 {
-			fmt.Println("No files to tidy")
-		}
-		for _, v := range files {
-			err := os.RemoveAll(v)
-			if err != nil {
-				fmt.Println("Failed to delete:", v)
-			}
-			color.Println("<tomato>Deleted</>:", v)
-		}
-		if len(files) > 0 {
-			color.Println("<green>SUCCESS!</> Folder is now tidy")
-		}
+		action.Tidy()
 
 	case "certs-dir":
 		fmt.Print(cockroach.GetCertsDir())
