@@ -11,6 +11,7 @@ import (
 
 type Release struct {
 	Version      string
+	Date         string
 	ReleaseNotes string
 	DownloadURI  string
 	SHA256Sum    string
@@ -24,6 +25,14 @@ type VersionGroup struct {
 func GetReleases(versions ...string) ([]VersionGroup, error) {
 	var versionGroups []VersionGroup
 	var currentGroup *VersionGroup
+	version := ""
+
+	if len(versions) > 0 {
+		version = versions[0]
+		if version[:1] != "v" {
+			version = "v" + version
+		}
+	}
 
 	url := "https://cockroachlabs.com/docs/releases/"
 
@@ -38,7 +47,11 @@ func GetReleases(versions ...string) ([]VersionGroup, error) {
 		return nil, err
 	}
 
-	fmt.Println("running with scope:", runtime.GOOS)
+	if version == "" {
+		fmt.Printf("Checking releases on %s\n", runtime.GOOS)
+	} else {
+		fmt.Printf("Getting releases on %s containing version %s\n", runtime.GOOS, version)
+	}
 
 	doc.Find(fmt.Sprintf("section[data-scope='%s'] tr", runtime.GOOS)).Each(func(index int, element *goquery.Selection) {
 		if index > 0 { // Skip header row
@@ -55,6 +68,7 @@ func GetReleases(versions ...string) ([]VersionGroup, error) {
 							VersionPrefix: versionPrefix,
 						}
 					}
+					date := strings.TrimSpace(element.Find("td").Eq(1).Text())
 					releaseNotes := fmt.Sprintf("%s%s", "https://www.cockroachlabs.com", strings.TrimSpace(element.Find("td a").First().AttrOr("href", "")))
 					downloadURI := strings.TrimSpace(element.Find("td a:contains('Full Binary')").AttrOr("href", ""))
 					if downloadURI == "" {
@@ -67,6 +81,7 @@ func GetReleases(versions ...string) ([]VersionGroup, error) {
 					sha256SumLink := strings.TrimSpace(element.Find("td a:contains('SHA256')").AttrOr("href", ""))
 					release := Release{
 						Version:      version,
+						Date:         date,
 						ReleaseNotes: releaseNotes,
 						DownloadURI:  downloadURI,
 						SHA256Sum:    sha256SumLink,
@@ -82,26 +97,33 @@ func GetReleases(versions ...string) ([]VersionGroup, error) {
 	}
 
 	// this is for testing output
-	if len(versions) > 0 {
-		if versions[0][:1] != "v" {
-			versions[0] = "v" + versions[0]
-		}
-		for _, versionGroup := range versionGroups {
-			if versionGroup.VersionPrefix == versions[0] {
-				fmt.Printf("Version Prefix: %s\n", versionGroup.VersionPrefix)
-				fmt.Printf("Version%8s | Download%70s | SHA256%75s | Release Notes%56s\n", "", "", "", "")
-				fmt.Printf("%s|%s|%s|%s\n", strings.Repeat("-", 16), strings.Repeat("-", 80), strings.Repeat("-", 83), strings.Repeat("-", 70))
-				for _, release := range versionGroup.Releases {
-					fmt.Printf("%-15s | %-78s | %-81s | %-55s\n", release.Version, release.DownloadURI, release.SHA256Sum, release.ReleaseNotes)
-				}
-			}
-		}
-	} else {
+	if version == "" {
 		for _, versionGroup := range versionGroups {
 			fmt.Printf("Version Prefix: %s\n", versionGroup.VersionPrefix)
 			for _, release := range versionGroup.Releases {
 				fmt.Printf("\tVersion: %s, Release Notes: %s, Download URI: %s, SHA256Sum: %s\n", release.Version, release.ReleaseNotes, release.DownloadURI, release.SHA256Sum)
 			}
+		}
+	} else {
+		found := false
+		for _, versionGroup := range versionGroups {
+			if versionGroup.VersionPrefix == version {
+				found = true
+				fmt.Printf("| %s|%s|%s|\n", strings.Repeat("-", 16), strings.Repeat("-", 12), strings.Repeat("-", 11))
+				fmt.Printf("| Version%8s | Date%6s | Available |\n", "", "")
+				fmt.Printf("| %s|%s|%s\n", strings.Repeat("-", 16), strings.Repeat("-", 12), strings.Repeat("-", 12))
+				for _, release := range versionGroup.Releases {
+					available := "YES"
+					if release.DownloadURI == "WITHDRAWN" {
+						available = release.DownloadURI
+					}
+					fmt.Printf("| %-15s | %s | %-9s |\n", release.Version, release.Date, available)
+				}
+				fmt.Printf("| %s|%s|%s|\n", strings.Repeat("-", 16), strings.Repeat("-", 12), strings.Repeat("-", 11))
+			}
+		}
+		if !found {
+			fmt.Println("There do not appear to be any downloads for this version")
 		}
 	}
 
