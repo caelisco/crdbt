@@ -49,6 +49,29 @@ func ParseArgs() {
 	case "help":
 		usage("")
 
+	case "interactive":
+		result, _ := action.Interactive()
+		fmt.Printf("%v", result)
+		return
+		res, err := action.GetReleases()
+		fmt.Printf("%v", res)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		ver, err := action.InteractiveVersion(res)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		r, err := action.InteractiveRelease(ver, res)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Printf("%v\n", r)
+
 	case "version":
 		out, err := cockroach.Version()
 		if err != nil {

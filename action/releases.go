@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/manifoldco/promptui"
 )
 
 type Release struct {
@@ -136,4 +137,103 @@ func PrintReleases(versions ...string) error {
 		}
 	}
 	return nil
+}
+
+func Interactive() (Release, error) {
+	var release Release
+	// ask the user to select a version
+	releases, err := GetReleases()
+	if err != nil {
+		return release, err
+	}
+	// build a list of versions
+	var versions []string
+	for _, v := range releases {
+		versions = append(versions, v.VersionPrefix)
+	}
+	prompt := promptui.Select{
+		Label: "Select a version of Cockroach to use",
+		Items: versions,
+	}
+	_, result, err := prompt.Run()
+	if err != nil {
+		return release, err
+	}
+	var details []string
+	for _, v := range releases {
+		if v.VersionPrefix == result {
+			for _, r := range v.Releases {
+				details = append(details, fmt.Sprintf("%s released on %s", r.Version, r.Date))
+			}
+		}
+	}
+	fmt.Println(result)
+	prompt = promptui.Select{
+		Label: "Select a release",
+		Items: details,
+	}
+
+	_, result, err = prompt.Run()
+	if err != nil {
+		return release, err
+	}
+
+	for _, r := range releases {
+		for _, v := range r.Releases {
+			if v.Version == result {
+				release = v
+			}
+		}
+	}
+
+	return release, nil
+}
+
+func InteractiveVersion(versionGroup []VersionGroup) (string, error) {
+	// build a list of versions
+	var versions []string
+	for _, v := range versionGroup {
+		versions = append(versions, v.VersionPrefix)
+	}
+	prompt := promptui.Select{
+		Label: "Select a version of Cockroach to use",
+		Items: versions,
+	}
+	_, result, err := prompt.Run()
+	if err != nil {
+		return "", err
+	}
+	return result, nil
+}
+
+func InteractiveRelease(version string, versionGroup []VersionGroup) (Release, error) {
+	var release Release
+	var details []string
+	for _, v := range versionGroup {
+		if v.VersionPrefix == version {
+			for _, r := range v.Releases {
+				details = append(details, fmt.Sprintf("%s released on %s", r.Version, r.Date))
+			}
+		}
+	}
+
+	prompt := promptui.Select{
+		Label: "Select a release",
+		Items: details,
+	}
+
+	_, result, err := prompt.Run()
+	if err != nil {
+		return release, err
+	}
+	// scan through the list to get the details
+	fmt.Println("Searching for:", strings.Split(result, " ")[0])
+	for _, v := range versionGroup {
+		for _, r := range v.Releases {
+			if r.Version == strings.Split(result, " ")[0] {
+				release = r
+			}
+		}
+	}
+	return release, nil
 }
