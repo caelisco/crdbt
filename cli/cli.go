@@ -86,11 +86,12 @@ func ParseArgs() {
 
 	case "list":
 		if len(args) == 1 {
-			cockroach.GetReleases()
+			action.PrintReleases()
 		}
 		if len(args) == 2 {
-			cockroach.GetReleases(args[1])
+			action.PrintReleases(args[1])
 		}
+
 	case "extract":
 		if ok := argCountCheck(args, 2); ok {
 			err := action.ExtractTGZ(args[1])

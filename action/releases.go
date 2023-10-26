@@ -1,4 +1,4 @@
-package cockroach
+package action
 
 import (
 	"fmt"
@@ -22,17 +22,10 @@ type VersionGroup struct {
 	Releases      []Release
 }
 
-func GetReleases(versions ...string) ([]VersionGroup, error) {
+// GetReleases retrieves the release page from Cockroachlabs, and parses it for useful information
+func GetReleases() ([]VersionGroup, error) {
 	var versionGroups []VersionGroup
 	var currentGroup *VersionGroup
-	version := ""
-
-	if len(versions) > 0 {
-		version = versions[0]
-		if version[:1] != "v" {
-			version = "v" + version
-		}
-	}
 
 	url := "https://cockroachlabs.com/docs/releases/"
 
@@ -46,13 +39,6 @@ func GetReleases(versions ...string) ([]VersionGroup, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	if version == "" {
-		fmt.Printf("Checking releases on %s\n", runtime.GOOS)
-	} else {
-		fmt.Printf("Getting releases on %s containing version %s\n", runtime.GOOS, version)
-	}
-
 	doc.Find(fmt.Sprintf("section[data-scope='%s'] tr", runtime.GOOS)).Each(func(index int, element *goquery.Selection) {
 		if index > 0 { // Skip header row
 			version := strings.TrimSpace(element.Find("td").First().Text())
@@ -96,6 +82,29 @@ func GetReleases(versions ...string) ([]VersionGroup, error) {
 		versionGroups = append(versionGroups, *currentGroup) // append the last group here
 	}
 
+	return versionGroups, nil
+}
+
+func PrintReleases(versions ...string) error {
+	versionGroups, err := GetReleases()
+	if err != nil {
+		return err
+	}
+	version := ""
+
+	if len(versions) > 0 {
+		version = versions[0]
+		if version[:1] != "v" {
+			version = "v" + version
+		}
+	}
+
+	if version == "" {
+		fmt.Printf("Checking releases on %s\n", runtime.GOOS)
+	} else {
+		fmt.Printf("Getting releases on %s containing version %s\n", runtime.GOOS, version)
+	}
+
 	// this is for testing output
 	if version == "" {
 		for _, versionGroup := range versionGroups {
@@ -126,6 +135,5 @@ func GetReleases(versions ...string) ([]VersionGroup, error) {
 			fmt.Println("There do not appear to be any downloads for this version")
 		}
 	}
-
-	return versionGroups, nil
+	return nil
 }
