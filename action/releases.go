@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/gookit/color"
 	"github.com/manifoldco/promptui"
 )
 
@@ -43,6 +44,9 @@ func GetReleases() ([]VersionGroup, error) {
 	doc.Find(fmt.Sprintf("section[data-scope='%s'] tr", runtime.GOOS)).Each(func(index int, element *goquery.Selection) {
 		if index > 0 { // Skip header row
 			version := strings.TrimSpace(element.Find("td").First().Text())
+			if strings.Contains(version, "\n") {
+				version = strings.Split(version, "\n")[0]
+			}
 			splitVersion := strings.Split(version, ".")
 			if len(splitVersion) >= 2 {
 				versionPrefix := strings.TrimSpace(strings.Join(splitVersion[:2], "."))
@@ -83,6 +87,8 @@ func GetReleases() ([]VersionGroup, error) {
 		versionGroups = append(versionGroups, *currentGroup) // append the last group here
 	}
 
+	// change the order to reverse items
+
 	return versionGroups, nil
 }
 
@@ -109,27 +115,36 @@ func PrintReleases(versions ...string) error {
 	// this is for testing output
 	if version == "" {
 		for _, versionGroup := range versionGroups {
-			fmt.Printf("Version Prefix: %s\n", versionGroup.VersionPrefix)
+			fmt.Printf("\n| Version Prefix: %-38s |\n", versionGroup.VersionPrefix)
+			fmt.Printf("| %s|%s|%s|\n", strings.Repeat("-", 30), strings.Repeat("-", 12), strings.Repeat("-", 11))
+			fmt.Printf("| Version%22s | Date%6s | Available |\n", "", "")
+			fmt.Printf("| %s|%s|%s\n", strings.Repeat("-", 30), strings.Repeat("-", 12), strings.Repeat("-", 12))
 			for _, release := range versionGroup.Releases {
-				fmt.Printf("\tVersion: %s, Release Notes: %s, Download URI: %s, SHA256Sum: %s\n", release.Version, release.ReleaseNotes, release.DownloadURI, release.SHA256Sum)
+				available := "YES"
+				if release.DownloadURI == "WITHDRAWN" {
+					available = release.DownloadURI
+				}
+				fmt.Printf("| %-29s | %s | %-9s |\n", release.Version, release.Date, available)
 			}
+			fmt.Printf("| %s|%s|%s|\n", strings.Repeat("-", 30), strings.Repeat("-", 12), strings.Repeat("-", 11))
 		}
 	} else {
 		found := false
 		for _, versionGroup := range versionGroups {
 			if versionGroup.VersionPrefix == version {
 				found = true
-				fmt.Printf("| %s|%s|%s|\n", strings.Repeat("-", 16), strings.Repeat("-", 12), strings.Repeat("-", 11))
-				fmt.Printf("| Version%8s | Date%6s | Available |\n", "", "")
-				fmt.Printf("| %s|%s|%s\n", strings.Repeat("-", 16), strings.Repeat("-", 12), strings.Repeat("-", 12))
+				color.Printf("\n| Version Prefix: <green>%-38s</> |\n", versionGroup.VersionPrefix)
+				fmt.Printf("| %s|%s|%s|\n", strings.Repeat("-", 30), strings.Repeat("-", 12), strings.Repeat("-", 11))
+				fmt.Printf("| Version%22s | Date%6s | Available |\n", "", "")
+				fmt.Printf("| %s|%s|%s\n", strings.Repeat("-", 30), strings.Repeat("-", 12), strings.Repeat("-", 12))
 				for _, release := range versionGroup.Releases {
 					available := "YES"
 					if release.DownloadURI == "WITHDRAWN" {
 						available = release.DownloadURI
 					}
-					fmt.Printf("| %-15s | %s | %-9s |\n", release.Version, release.Date, available)
+					fmt.Printf("| %-29s | %s | %-9s |\n", release.Version, release.Date, available)
 				}
-				fmt.Printf("| %s|%s|%s|\n", strings.Repeat("-", 16), strings.Repeat("-", 12), strings.Repeat("-", 11))
+				fmt.Printf("| %s|%s|%s|\n", strings.Repeat("-", 30), strings.Repeat("-", 12), strings.Repeat("-", 11))
 			}
 		}
 		if !found {

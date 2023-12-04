@@ -24,11 +24,6 @@ func ParseArgs() {
 	// Special commands are automatically stripped from command line options
 	var args []string
 	for _, v := range os.Args[1:] {
-		if strings.EqualFold(v, "version") {
-			fmt.Println("crdbt - a command line utility for working with CockroachDB")
-			fmt.Println("crdbt version: ")
-			fmt.Println("Runtime      : ", action.GetOS())
-		}
 		if strings.EqualFold(v, "-v") || strings.EqualFold(v, "--verbose") {
 			log.Println("Running crdbt in verbose mode")
 			exec.Verbose = true
@@ -52,7 +47,6 @@ func ParseArgs() {
 	case "interactive":
 		result, _ := action.Interactive()
 		fmt.Printf("%v", result)
-		return
 		res, err := action.GetReleases()
 		fmt.Printf("%v", res)
 		if err != nil {
@@ -77,6 +71,8 @@ func ParseArgs() {
 		if err != nil {
 			color.Println("<fg=white;bg=red;>Error:</>", err)
 		}
+		fmt.Println("crdbt version:    0.2.0")
+		fmt.Println("Runtime:         ", action.GetOS())
 		fmt.Println(out)
 
 	case "download":
@@ -93,13 +89,39 @@ func ParseArgs() {
 		usage("not enough command line arguments to download.\n\tTry crdbt download latest")
 
 	case "update":
-		out, err := cockroach.Version()
+		installed, err := cockroach.GetVersion()
 		if err != nil {
 			color.Println("<fg=white;bg=red;>Error:</>", err)
-			color.Println("<cyan>Potential fix:</> Use crdbt install latest")
+			color.Println("<cyan>Potential fix:</> Use <yellow>crdbt install latest</>")
 			return
 		}
-		fmt.Println(out)
+		installed = "v" + installed
+		fmt.Println("Installed version: ", installed)
+
+		releases, err := action.GetReleases()
+		if err != nil {
+			color.Println("<fg=white;bg=red;>Error:</>", err)
+			return
+		}
+
+		index := strings.LastIndex(installed, ".")
+		installed = installed[:index]
+		var latestCurrent string
+		var latestGlobal string
+
+		for i, version := range releases {
+			// the first item will be the latestGlobal
+			if i == 0 {
+				latestGlobal = version.Releases[0].Version
+			}
+			if version.VersionPrefix == installed {
+				latestCurrent = version.Releases[0].Version
+				break
+			}
+		}
+		fmt.Println("Latest in same version:", latestCurrent)
+		fmt.Println("Latest in global version:", latestGlobal)
+
 	case "upgrade":
 		if ok := argCountCheck(args, 2); ok {
 			//cockroach.Upgrade(args[1])
