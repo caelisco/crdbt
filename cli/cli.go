@@ -89,14 +89,17 @@ func ParseArgs() {
 		usage("not enough command line arguments to download.\n\tTry crdbt download latest")
 
 	case "update":
+		// crdbt update
+		// Works similar to apt update where it provides a list of updates that are available
+		// It gets the version of CockroachDB installed, then gets the full list of releases from the
+		// Cockroach Labs website.
+
 		installed, err := cockroach.GetVersion()
 		if err != nil {
 			color.Println("<fg=white;bg=red;>Error:</>", err)
 			color.Println("<cyan>Potential fix:</> Use <yellow>crdbt install latest</>")
 			return
 		}
-		installed = "v" + installed
-		fmt.Println("Installed version: ", installed)
 
 		releases, err := action.GetReleases()
 		if err != nil {
@@ -104,24 +107,44 @@ func ParseArgs() {
 			return
 		}
 
+		// only interested in the major/minor so we trim from the pos of the last fullstop
 		index := strings.LastIndex(installed, ".")
-		installed = installed[:index]
+		installedv := installed[:index]
 		var latestCurrent string
 		var latestGlobal string
 
-		for i, version := range releases {
-			// the first item will be the latestGlobal
-			if i == 0 {
-				latestGlobal = version.Releases[0].Version
-			}
-			if version.VersionPrefix == installed {
+		// the last item in the array containes the very latest available release
+		if len(releases) > 0 {
+			latestGlobal = releases[len(releases)-1].Releases[0].Version
+		}
+
+		for _, version := range releases {
+			if version.VersionPrefix == installedv {
 				latestCurrent = version.Releases[0].Version
 				break
 			}
 		}
-		fmt.Println("Latest in same version:", latestCurrent)
-		fmt.Println("Latest in global version:", latestGlobal)
 
+		fmt.Printf("| Installed           | %-20s | %-25s |\n", installed, " ")
+		fmt.Printf("| Latest in installed | %-20s | ", latestCurrent)
+		if latestCurrent > installed {
+			color.Printf("%-25s |\n", "<yellow>crdbt upgrade current</>")
+		} else {
+			fmt.Printf("%25s |\n", " ")
+		}
+		fmt.Printf("| Latest build        | %-20s | ", latestGlobal)
+		if latestGlobal > latestCurrent {
+			color.Printf("%-25s |\n", "<yellow>crdbt upgrade latest</>")
+		} else {
+			fmt.Printf("%25s |\n", " ")
+		}
+		// provide a warning
+		words := []string{"alpha", "beta", "rc"}
+		for _, word := range words {
+			if strings.Contains(latestGlobal, word) {
+				color.Printf("<fg=white;bg=red;>Warning:</> <yellow>this is a %s version</>\n", word)
+			}
+		}
 	case "upgrade":
 		if ok := argCountCheck(args, 2); ok {
 			//cockroach.Upgrade(args[1])

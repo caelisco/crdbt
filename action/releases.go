@@ -31,8 +31,11 @@ func GetReleases() ([]VersionGroup, error) {
 
 	url := "https://cockroachlabs.com/docs/releases/"
 
+	fmt.Print("Retrieving releases from CockroachDB ")
+
 	res, err := http.Get(url)
 	if err != nil {
+		color.Println("<red>failed</>")
 		return nil, err
 	}
 	defer res.Body.Close()
@@ -41,6 +44,9 @@ func GetReleases() ([]VersionGroup, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	color.Println("<green>success</>")
+
 	doc.Find(fmt.Sprintf("section[data-scope='%s'] tr", runtime.GOOS)).Each(func(index int, element *goquery.Selection) {
 		if index > 0 { // Skip header row
 			version := strings.TrimSpace(element.Find("td").First().Text())
@@ -71,11 +77,11 @@ func GetReleases() ([]VersionGroup, error) {
 
 					sha256SumLink := strings.TrimSpace(element.Find("td a:contains('SHA256')").AttrOr("href", ""))
 					release := Release{
-						Version:      version,
-						Date:         date,
-						ReleaseNotes: releaseNotes,
-						DownloadURI:  downloadURI,
-						SHA256Sum:    sha256SumLink,
+						Version:      strings.TrimSpace(version),
+						Date:         strings.TrimSpace(date),
+						ReleaseNotes: strings.TrimSpace(releaseNotes),
+						DownloadURI:  strings.TrimSpace(downloadURI),
+						SHA256Sum:    strings.TrimSpace(sha256SumLink),
 					}
 					currentGroup.Releases = append(currentGroup.Releases, release)
 				}
@@ -88,6 +94,10 @@ func GetReleases() ([]VersionGroup, error) {
 	}
 
 	// change the order to reverse items
+	n := len(versionGroups)
+	for i := 0; i < n/2; i++ {
+		versionGroups[i], versionGroups[n-1-i] = versionGroups[n-1-i], versionGroups[i]
+	}
 
 	return versionGroups, nil
 }
