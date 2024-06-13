@@ -67,6 +67,11 @@ func ParseArgs() {
 		fmt.Printf("%v\n", r)
 
 	case "version":
+		if !cockroach.Installed() {
+			fmt.Println("Cockroach does not appear to be installed")
+			fmt.Println("Use: crdbt install")
+			return
+		}
 		out, err := cockroach.Version()
 		if err != nil {
 			color.Println("<fg=white;bg=red;>Error:</>", err)
@@ -86,13 +91,19 @@ func ParseArgs() {
 			}
 			return
 		}
-		usage("not enough command line arguments to download.\n\tTry crdbt download latest")
+		usage("not enough command line arguments to download.\n<cyan>Try:  </> crdbt download latest")
 
 	case "update":
 		// crdbt update
 		// Works similar to apt update where it provides a list of updates that are available
 		// It gets the version of CockroachDB installed, then gets the full list of releases from the
 		// Cockroach Labs website.
+
+		if !cockroach.Installed() {
+			fmt.Println("Cockroach does not appear to be installed")
+			fmt.Println("Use: crdbt install")
+			return
+		}
 
 		installed, err := cockroach.GetVersion()
 		if err != nil {
@@ -146,6 +157,11 @@ func ParseArgs() {
 			}
 		}
 	case "upgrade":
+		if !cockroach.Installed() {
+			fmt.Println("Cockroach does not appear to be installed")
+			fmt.Println("Use: crdbt install")
+			return
+		}
 		if ok := argCountCheck(args, 2); ok {
 			//cockroach.Upgrade(args[1])
 			return
