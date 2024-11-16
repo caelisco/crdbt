@@ -1,3 +1,4 @@
+Archived project due to license changes in CockroachDB and no longer needing a utility to work with the database.
 # crdbt
 CockroachDB Tools (crdbt) is a simple command line utility that helps manage the installation, configuration and upgrading of CockroachDB.
 
